@@ -1,9 +1,10 @@
 package org.example;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         var lab1 = new Lab1();
         var scanner = new Scanner(System.in);
 
@@ -17,7 +18,7 @@ public class Main {
         }
     }
 
-    private static void handleUserCommands(Scanner scanner, Lab1 lab1) {
+    private static void handleUserCommands(Scanner scanner, Lab1 lab1) throws IOException {
         while (true) {
             System.out.println("Ожидание указаний");
             String command = scanner.nextLine();
@@ -32,7 +33,9 @@ public class Main {
                     System.out.println("Над каким объектом производится операция?");
                     int objectId = scanner.nextInt();
                     scanner.nextLine();
-                    lab1.write(objectId);
+                    System.out.println("Введите значение, которое хотите записать");
+                    var value = scanner.nextLine();
+                    lab1.write(objectId, value);
                 }
                 case "grant" -> {
                     System.out.println("Право на какой объект передается?");

@@ -1,5 +1,9 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +53,6 @@ public class Lab1 {
         }
     }
 
-    public void logout() {
-        currentUsername = "";
-    }
 
     public void printAccesses() {
         var listOfAccess = matrixOfAccess.get(currentUsername);
@@ -69,10 +70,11 @@ public class Lab1 {
         }
     }
 
-    public void write(Integer numOfObject) {
+    public void write(Integer numOfObject, String value) throws IOException {
         var access = matrixOfAccess.get(currentUsername).get(numOfObject);
         if (access == 2 || access == 3 || access == 5) {
             System.out.println("Операция прошла успешно");
+            seri(numOfObject, value);
         } else {
             System.out.println("У вас нет прав для этой операции");
         }
@@ -89,9 +91,28 @@ public class Lab1 {
             case "write" -> matrixOfAccess.get(username).set(objectId, 2);
             case "grant" -> matrixOfAccess.get(username).set(objectId, 1);
             case "deny" -> matrixOfAccess.get(username).set(objectId, 0);
-            default -> {}
+            default -> {
+            }
         }
     }
 
+
+    private void seri(Integer numObject, String value) throws IOException {
+        var objectMapper = new ObjectMapper();
+        String filePath = "C:\\Users\\grish\\IdeaProjects\\information-protection\\src\\main\\java\\org\\example\\objects.json";
+        Objects myObject = null;
+        try {
+            myObject = objectMapper.readValue(new File(filePath), Objects.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert myObject != null;
+        myObject.objects().put(numObject, value);
+        objectMapper.writeValue(new File(filePath), myObject);
+    }
+
+    public static void main(String[] args) throws IOException {
+        new Lab1().seri(8, "fdfd");
+    }
 
 }
