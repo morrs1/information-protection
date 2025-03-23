@@ -1,9 +1,5 @@
 package org.example;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,20 +22,44 @@ public class Lab1 {
         }
     };
 
+    private final HashMap<Integer, String> setOfSecurity = new HashMap<>() {
+        {
+            put(0, "Совершенно секретно");
+            put(1, "Секретно");
+            put(2, "Открытые данные");
+            put(3, "Любой уровень");
+        }
+    };
+
     public HashMap<String, ArrayList<Integer>> matrixOfAccess = new HashMap<>();
     private String currentUsername = "";
+    public HashMap<Integer, Integer> confidentialityOfObjects = new HashMap<>();
+    public HashMap<String, Integer> confidentialityOfUsers = new HashMap<>();
 
     public Lab1() {
+        System.out.println("Обозначения уровеней доступа: \n" + truthOfAccess + "\n");
+        System.out.println("Обозначения уровней конфиденциальности: \n" + setOfSecurity + "\n");
         var random = new Random();
         for (var i = 0; i < COUNT_OF_USERS; i++) {
+            confidentialityOfUsers.put(listOfUsers.get(i), random.nextInt(setOfSecurity.size() - 1));
             var listOfAccess = new ArrayList<Integer>();
             for (int j = 0; j < COUNT_OF_OBJECTS; j++) {
-                listOfAccess.add(random.nextInt(6));
+                listOfAccess.add(random.nextInt(COUNT_OF_OBJECTS));
             }
             matrixOfAccess.put(listOfUsers.get(i), listOfAccess);
         }
         matrixOfAccess.put("Egor", new ArrayList<>(List.of(5, 5, 5, 5, 5, 5)));
+        System.out.println("Матрица доступа: ");
         matrixOfAccess.forEach((key, value) -> System.out.println(key + ":" + value));
+        confidentialityOfUsers.put("Egor", 3);
+
+        for (var i = 0; i < COUNT_OF_OBJECTS; i++) {
+            confidentialityOfObjects.put(i, random.nextInt(setOfSecurity.size() - 1));
+        }
+        System.out.println("\nУровени конфиденциальности для объектов:");
+        System.out.println(confidentialityOfObjects + "\n");
+        System.out.println("Уровени конфиденциальности для пользователей:");
+        System.out.println(confidentialityOfUsers + "\n");
     }
 
     public boolean authenticate(String username) {
@@ -53,11 +73,34 @@ public class Lab1 {
         }
     }
 
+    public void logout() {
+        currentUsername = "";
+    }
 
     public void printAccesses() {
         var listOfAccess = matrixOfAccess.get(currentUsername);
         for (var i = 0; i < listOfAccess.size(); i++) {
             System.out.printf("Обьект: %d Права доступа: %s \n", i, truthOfAccess.get(listOfAccess.get(i)));
+        }
+    }
+
+    public void printAccessibleObjects(){
+        for(var object : confidentialityOfObjects.keySet()){
+            if (confidentialityOfUsers.get(currentUsername) == 3) {
+                System.out.println("Объект "+  object + " доступенн");
+            }
+            if (confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(object)) {
+                System.out.println("Объект "+  object + " доступен");
+            }
+        }
+    }
+
+
+    public void accessOfObject(int object){
+        if (confidentialityOfUsers.get(currentUsername) == 3 || confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(object)) {
+            System.out.println("Операция успешна");
+        }else {
+            System.out.println("Отказ в операции. Недостаточно прав.");
         }
     }
 
@@ -70,11 +113,10 @@ public class Lab1 {
         }
     }
 
-    public void write(Integer numOfObject, String value) throws IOException {
+    public void write(Integer numOfObject) {
         var access = matrixOfAccess.get(currentUsername).get(numOfObject);
         if (access == 2 || access == 3 || access == 5) {
             System.out.println("Операция прошла успешно");
-            seri(numOfObject, value);
         } else {
             System.out.println("У вас нет прав для этой операции");
         }
@@ -96,23 +138,5 @@ public class Lab1 {
         }
     }
 
-
-    private void seri(Integer numObject, String value) throws IOException {
-        var objectMapper = new ObjectMapper();
-        String filePath = "C:\\Users\\grish\\IdeaProjects\\information-protection\\src\\main\\java\\org\\example\\objects.json";
-        Objects myObject = null;
-        try {
-            myObject = objectMapper.readValue(new File(filePath), Objects.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assert myObject != null;
-        myObject.objects().put(numObject, value);
-        objectMapper.writeValue(new File(filePath), myObject);
-    }
-
-    public static void main(String[] args) throws IOException {
-        new Lab1().seri(8, "fdfd");
-    }
 
 }
