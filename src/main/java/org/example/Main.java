@@ -13,6 +13,7 @@ public class Main {
             String username = scanner.nextLine();
             if (lab1.authenticate(username)) {
                 lab1.printAccesses();
+                lab1.printAccessibleObjects();
                 handleUserCommands(scanner, lab1);
             }
         }
@@ -58,7 +59,14 @@ public class Main {
                     String username = scanner.nextLine();
                     if (lab1.authenticate(username)) {
                         lab1.printAccesses();
+                        lab1.printAccessibleObjects();
                     }
+                }
+                case "request" -> {
+                    System.out.println("К какому объекту хотите осуществить доступ? ");
+                    int objectId = scanner.nextInt();
+                    scanner.nextLine();
+                    lab1.accessOfObject(objectId);
                 }
                 default -> System.out.println("Неверный выбор операции");
             }
