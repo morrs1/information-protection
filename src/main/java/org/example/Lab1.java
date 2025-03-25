@@ -1,5 +1,9 @@
 package org.example;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +31,6 @@ public class Lab1 {
             put(0, "Совершенно секретно");
             put(1, "Секретно");
             put(2, "Открытые данные");
-            put(3, "Любой уровень");
         }
     };
 
@@ -41,7 +44,7 @@ public class Lab1 {
         System.out.println("Обозначения уровней конфиденциальности: \n" + setOfSecurity + "\n");
         var random = new Random();
         for (var i = 0; i < COUNT_OF_USERS; i++) {
-            confidentialityOfUsers.put(listOfUsers.get(i), random.nextInt(setOfSecurity.size() - 1));
+            confidentialityOfUsers.put(listOfUsers.get(i), random.nextInt(setOfSecurity.size()));
             var listOfAccess = new ArrayList<Integer>();
             for (int j = 0; j < COUNT_OF_OBJECTS; j++) {
                 listOfAccess.add(random.nextInt(COUNT_OF_OBJECTS));
@@ -51,10 +54,9 @@ public class Lab1 {
         matrixOfAccess.put("Egor", new ArrayList<>(List.of(5, 5, 5, 5, 5, 5)));
         System.out.println("Матрица доступа: ");
         matrixOfAccess.forEach((key, value) -> System.out.println(key + ":" + value));
-        confidentialityOfUsers.put("Egor", 3);
 
         for (var i = 0; i < COUNT_OF_OBJECTS; i++) {
-            confidentialityOfObjects.put(i, random.nextInt(setOfSecurity.size() - 1));
+            confidentialityOfObjects.put(i, random.nextInt(setOfSecurity.size()));
         }
         System.out.println("\nУровени конфиденциальности для объектов:");
         System.out.println(confidentialityOfObjects + "\n");
@@ -84,39 +86,59 @@ public class Lab1 {
         }
     }
 
-    public void printAccessibleObjects(){
-        for(var object : confidentialityOfObjects.keySet()){
-            if (confidentialityOfUsers.get(currentUsername) == 3) {
-                System.out.println("Объект "+  object + " доступенн");
-            }
+    public void printAccessibleObjects() {
+        for (var object : confidentialityOfObjects.keySet()) {
             if (confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(object)) {
-                System.out.println("Объект "+  object + " доступен");
+                System.out.println("Объект " + object + " доступен для чтения");
+            }
+            if (confidentialityOfUsers.get(currentUsername) >= confidentialityOfObjects.get(object)) {
+                System.out.println("Объект " + object + " доступен для записи");
             }
         }
     }
 
 
-    public void accessOfObject(int object){
-        if (confidentialityOfUsers.get(currentUsername) == 3 || confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(object)) {
+    public void accessOfObject(int object) {
+        if (confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(object)) {
             System.out.println("Операция успешна");
-        }else {
+        } else {
             System.out.println("Отказ в операции. Недостаточно прав.");
         }
     }
 
 
     public void read(Integer numOfObject) {
-        if (matrixOfAccess.get(currentUsername).get(numOfObject) == 4 || matrixOfAccess.get(currentUsername).get(numOfObject) == 5) {
-            System.out.println("Операция прошла успешно");
+        if (confidentialityOfUsers.get(currentUsername) <= confidentialityOfObjects.get(numOfObject)) {
+            var objectMapper = new ObjectMapper();
+            String filePath = "C:\\Users\\grish\\IdeaProjects\\information-protection\\src\\main\\java\\org\\example\\objects.json";
+            Objects myObject = null;
+            try {
+                myObject = objectMapper.readValue(new File(filePath), Objects.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            assert myObject != null;
+            System.out.println(myObject.objects().get(numOfObject));
+            System.out.println("Чтение прошло успешно");
         } else {
             System.out.println("У вас нет прав для этой операции");
         }
     }
 
-    public void write(Integer numOfObject) {
-        var access = matrixOfAccess.get(currentUsername).get(numOfObject);
-        if (access == 2 || access == 3 || access == 5) {
-            System.out.println("Операция прошла успешно");
+    public void write(Integer numOfObject, String value) throws IOException {
+        if (confidentialityOfUsers.get(currentUsername) >= confidentialityOfObjects.get(numOfObject)) {
+            var objectMapper = new ObjectMapper();
+            String filePath = "C:\\Users\\grish\\IdeaProjects\\information-protection\\src\\main\\java\\org\\example\\objects.json";
+            Objects myObject = null;
+            try {
+                myObject = objectMapper.readValue(new File(filePath), Objects.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            assert myObject != null;
+            myObject.objects().put(numOfObject, value);
+            objectMapper.writeValue(new File(filePath), myObject);;
+            System.out.println("Запись прошла успешно");
         } else {
             System.out.println("У вас нет прав для этой операции");
         }
